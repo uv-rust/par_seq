@@ -27,7 +27,7 @@ Copy and in-place modification supported.
 
 
 ## In-place modification
-```
+```rust
     fn par_in_place_map_test() -> std::thread::Result<()> {
         let len = 64;
         let mut dest = vec![0_u8; len];
