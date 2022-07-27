@@ -62,7 +62,7 @@ pub fn par_map<T: 'static>(
     dest: &mut [T],
     num_threads: usize,
     fr: std::sync::Arc<KernelFun2<T>>,
-) {
+) -> std::thread::Result<()> {
     let mut th = vec![];
     let chunk_size = (src.len() + num_threads - 1) / num_threads;
     let last_chunk_size = src.len() - (chunk_size * (num_threads - 1));
@@ -85,8 +85,11 @@ pub fn par_map<T: 'static>(
         }
     }
     for t in th {
-        let _ = t.join();
+        if let Err(e) = t.join() {
+            return Err(e);
+        }
     }
+    Ok(())
 }
 
 //-----------------------------------------------------------------------------
@@ -94,7 +97,7 @@ pub fn par_in_place_map<T: 'static>(
     dest: &mut [T],
     num_threads: usize,
     fr: std::sync::Arc<KernelFun1<T>>,
-) {
+) -> std::thread::Result<()> {
     let mut th = vec![];
     let chunk_size = (dest.len() + num_threads - 1) / num_threads;
     let last_chunk_size = dest.len() - (chunk_size * (num_threads - 1));
@@ -115,8 +118,11 @@ pub fn par_in_place_map<T: 'static>(
         }
     }
     for t in th {
-        let _ = t.join();
+        if  let Err(e) = t.join() {
+            return Err(e);
+        }
     }
+    Ok(())
 }
 
 //-----------------------------------------------------------------------------
@@ -125,7 +131,7 @@ pub fn par_in_place_map<T: 'static>(
 mod tests {
     use super::*;
     #[test]
-    fn par_map_test() {
+    fn par_map_test() -> std::thread::Result<()> {
         let len = 64;
         let src = vec![0_u8; len];
         let mut dest = vec![0_u8; len];
@@ -135,13 +141,16 @@ mod tests {
                 d[i] = s[i] + x;
             }
         };
-        par_map(&src, &mut dest, 3, kernel!(kernel_fun));
+        if let Err(e) = par_map(&src, &mut dest, 3, kernel!(kernel_fun)) {
+            return Err(e);
+        }
         for e in dest {
             assert_eq!(e, 1);
         }
+        Ok(())
     }
     #[test]
-    fn par_in_place_map_test() {
+    fn par_in_place_map_test() -> std::thread::Result<()> {
         let len = 64;
         let mut dest = vec![0_u8; len];
         let x = 1;
@@ -150,9 +159,12 @@ mod tests {
                 d[i] += x;
             }
         };
-        par_in_place_map(&mut dest, 3, kernel!(kernel_fun));
+        if let Err(e) = par_in_place_map(&mut dest, 3, kernel!(kernel_fun)) {
+            return Err(e);
+        }
         for e in dest {
             assert_eq!(e, 1);
         }
+        Ok(())
     }
 }
