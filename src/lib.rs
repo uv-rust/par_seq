@@ -135,7 +135,7 @@ mod tests {
                 d[i] = s[i] + x;
             }
         };
-        par_map(&src, &mut dest, 2, kernel!(kernel_fun));
+        par_map(&src, &mut dest, 3, kernel!(kernel_fun));
         for e in dest {
             assert_eq!(e, 1);
         }
@@ -150,7 +150,7 @@ mod tests {
                 d[i] += x;
             }
         };
-        par_in_place_map(&mut dest, 2, kernel!(kernel_fun));
+        par_in_place_map(&mut dest, 3, kernel!(kernel_fun));
         for e in dest {
             assert_eq!(e, 1);
         }
