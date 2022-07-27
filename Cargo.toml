@@ -7,4 +7,6 @@ description = "Parallel access to sequences"
 license = "MIT"
 homepage = "https://github.com/uv-rust/par_seq"
 repoository = "https://github.com/uv-rust/par_seq"
-readmie = "Readme.md"
+readme = "Readme.md"
+categories = ['concurrency']
+keywords = ["concurrency", "parallel"]

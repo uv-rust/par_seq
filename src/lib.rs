@@ -1,4 +1,64 @@
-// Need to move pointer to buffer element across threads
+//! Parallel execution of functions on sub-ranges of sequences.
+//!
+//! Supports both in-place and copy operations.
+//! The provided functions accept the number of threads to spawn an `Fn` 
+//! object with the following signatures:
+//!
+//! ### Copy and map
+//! ```rust,ignore
+//! Fn(&[T], &mut [T]);
+//! ````
+//! ### In-place modification
+//! ```rust,ignore
+//! Fn(&mut [T]);
+//! ````
+//! All the functions require the `Fn` object to be wrapped inside an `std::sync::Arc`
+//! instance to allow it to be passed across threads.
+//! A simple `kernel!` macro is provided which wraps whatever is passed to it with an
+//! `Arc` object.
+//!
+//! ## Examples
+//!
+//!```rust,ignore
+//!    // copy and map
+//!    fn par_map_test() -> std::thread::Result<()> {
+//!        let len = 64;
+//!        let src = vec![0_u8; len];
+//!        let mut dest = vec![0_u8; len];
+//!        let x = 1;
+//!        let kernel_fun = move |s: &[u8], d: &mut [u8]| {
+//!            for i in 0..s.len() {
+//!                d[i] = s[i] + x;
+//!            }
+//!        };
+//!        if let Err(e) = par_map(&src, &mut dest, 3, kernel!(kernel_fun)) {
+//!            return Err(e);
+//!        }
+//!        for e in dest {
+//!            assert_eq!(e, 1);
+//!        }
+//!        Ok(())
+//!    }
+//!    // in-place modification
+//!    fn par_in_place_map_test() -> std::thread::Result<()> {
+//!        let len = 64;
+//!        let mut dest = vec![0_u8; len];
+//!        let x = 1;
+//!        let kernel_fun = move |d: &mut [u8]| {
+//!            for i in 0..d.len() {
+//!                d[i] += x;
+//!            }
+//!        };
+//!        if let Err(e) = par_in_place_map(&mut dest, 3, kernel!(kernel_fun)) {
+//!            return Err(e);
+//!        }
+//!        for e in dest {
+//!            assert_eq!(e, 1);
+//!        }
+//!        Ok(())
+//!    }
+
+// Need to move pointer to buffer across threads
 //-----------------------------------------------------------------------------
 struct Movable<T>(*const T);
 impl<T> Movable<T> {
@@ -49,6 +109,7 @@ impl<T> FnMove1<T> {
 unsafe impl<T> Send for FnMove1<T> {}
 
 //-----------------------------------------------------------------------------
+/// Simple macro which wraps expression with `Arc` object.
 #[macro_export]
 macro_rules! kernel {
     ( $x:expr ) => {{
@@ -57,6 +118,7 @@ macro_rules! kernel {
 }
 
 //-----------------------------------------------------------------------------
+/// Map element from source sequence into element in destination sequence.
 pub fn par_map<T: 'static>(
     src: &[T],
     dest: &mut [T],
@@ -93,6 +155,7 @@ pub fn par_map<T: 'static>(
 }
 
 //-----------------------------------------------------------------------------
+/// Modify sequence element in-place.
 pub fn par_in_place_map<T: 'static>(
     dest: &mut [T],
     num_threads: usize,
