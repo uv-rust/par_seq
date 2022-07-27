@@ -2,7 +2,9 @@
 name = "par_seq"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
+authors = ["Ugo Varetto"]
+description = "Parallel access to sequences"
+license = "MIT"
+homepage = "https://github.com/uv-rust/par_seq"
+repoository = "https://github.com/uv-rust/par_seq"
+readmie = "Readme.md"
